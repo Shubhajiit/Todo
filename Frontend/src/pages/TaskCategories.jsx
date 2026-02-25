@@ -8,6 +8,8 @@ import { Loader2, Plus, Tag, Trash2 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+
 const TaskCategories = () => {
   const [categories, setCategories] = useState([])
   const [newCategory, setNewCategory] = useState('')
@@ -32,9 +34,11 @@ const TaskCategories = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true)
-      const res = await axios.get('http://localhost:8000/api/v1/category', getAuthHeaders())
-      if (res.data.success) {
-        setCategories(res.data.categories)
+      const res = await axios.get(`${API_URL}/api/v1/category`, getAuthHeaders())
+      if (res?.data?.success) {
+        setCategories(res?.data?.categories || [])
+      } else {
+        toast.error('Invalid categories response from server')
       }
     } catch (error) {
       if (error.response?.status === 400) {
@@ -61,15 +65,17 @@ const TaskCategories = () => {
     try {
       setSaving(true)
       const res = await axios.post(
-        'http://localhost:8000/api/v1/category',
+        `${API_URL}/api/v1/category`,
         { name: value },
         getAuthHeaders()
       )
 
-      if (res.data.success) {
+      if (res?.data?.success) {
         setCategories((prev) => [res.data.category, ...prev])
         setNewCategory('')
         toast.success('Category added')
+      } else {
+        toast.error('Invalid add category response from server')
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to add category')
@@ -81,13 +87,15 @@ const TaskCategories = () => {
   const removeCategory = async (categoryId) => {
     try {
       const res = await axios.delete(
-        `http://localhost:8000/api/v1/category/${categoryId}`,
+        `${API_URL}/api/v1/category/${categoryId}`,
         getAuthHeaders()
       )
 
-      if (res.data.success) {
+      if (res?.data?.success) {
         setCategories((prev) => prev.filter((item) => item._id !== categoryId))
         toast.success('Category deleted')
+      } else {
+        toast.error('Invalid delete category response from server')
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete category')

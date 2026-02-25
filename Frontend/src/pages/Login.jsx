@@ -17,6 +17,8 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+
 const Login = () => {
      const[showPassword , setShowPassword] =useState(false);
     const[loading , setLoading] =useState(false)
@@ -42,21 +44,23 @@ const Login = () => {
         console.log(formData)
         try{
             setLoading(true)
-            const res = await axios.post(`http://localhost:8000/api/v1/user/login` , formData,{
+            const res = await axios.post(`${API_URL}/api/v1/user/login` , formData,{
                 headers:{
                     "Content-Type":"application/json"
                 }
             })
-            if(res.data.success){
-                localStorage.setItem('token', res.data.accesstoken);
-                localStorage.setItem('user', JSON.stringify(res.data.user));
+            if(res?.data?.success){
+                localStorage.setItem('token', res.data.accesstoken || "");
+                localStorage.setItem('user', JSON.stringify(res.data.user || {}));
                 navigate('/')
-                toast.success(res.data.message)
+                toast.success(res?.data?.message || "Login successful")
+            } else {
+                toast.error("Invalid login response from server")
             }
 
         }catch(error){
             console.log(error)
-            toast.error(error.response.data.message)
+            toast.error(error?.response?.data?.message || "Failed to login")
         }finally{
             setLoading(false)
         }

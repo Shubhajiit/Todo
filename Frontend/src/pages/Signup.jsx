@@ -16,6 +16,7 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { toast } from "sonner"
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
 const Signup = () => {
     const[showPassword , setShowPassword] =useState(false);
@@ -37,29 +38,29 @@ const Signup = () => {
             [name]:value
         }))
     }
-
-    const submitHandler=async(e)=>{
-        e.preventDefault()
-        console.log(formData)
-        try{
-            setLoading(true)
-            const res = await axios.post(`http://localhost:8000/api/v1/user/register` , formData,{
-                headers:{
-                    "Content-Type":"application/json"
-                }
-            })
-            if(res.data.success){
-                navigate('/verify')
-                toast.success(res.data.message)
+const submitHandler=async(e)=>{
+    e.preventDefault()
+    console.log(formData)
+    try{
+        setLoading(true)
+        const res = await axios.post(`${API_URL}/api/v1/user/register` , formData,{
+            headers:{
+                "Content-Type":"application/json"
             }
-
-        }catch(error){
-            console.log(error)
-            toast.error(error.response.data.message)
-        }finally{
-            setLoading(false)
+        })
+        if (res?.data?.success) {
+            navigate('/verify')
+            toast.success(res?.data?.message || "Signup successful")
+        } else {
+            toast.error("Invalid signup response from server")
         }
+    }catch(error){
+        console.log(error)
+        toast.error(error?.response?.data?.message || "Failed to signup")
+    }finally{
+        setLoading(false)
     }
+}
 
     return (
         <div className='flex justify-center items-center min-h-screen bg-pink-100'>

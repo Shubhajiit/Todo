@@ -8,6 +8,8 @@ import { Loader2 } from "lucide-react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import { toast } from "sonner"
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+
 const Settings = () => {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -34,11 +36,13 @@ const Settings = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true)
-      const res = await axios.get('http://localhost:8000/api/v1/user/me', getAuthHeaders())
-      if (res.data.success) {
-        setFirstName(res.data.user.firstName || '')
-        setLastName(res.data.user.lastName || '')
-        setEmail(res.data.user.email || '')
+      const res = await axios.get(`${API_URL}/api/v1/user/me`, getAuthHeaders())
+      if (res?.data?.success) {
+        setFirstName(res?.data?.user?.firstName || '')
+        setLastName(res?.data?.user?.lastName || '')
+        setEmail(res?.data?.user?.email || '')
+      } else {
+        toast.error('Invalid profile response from server')
       }
     } catch (error) {
       if (error.response?.status === 400) {
@@ -63,7 +67,7 @@ const Settings = () => {
     try {
       setSaving(true)
       const res = await axios.put(
-        'http://localhost:8000/api/v1/user/me',
+        `${API_URL}/api/v1/user/me`,
         {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
@@ -72,18 +76,20 @@ const Settings = () => {
         getAuthHeaders()
       )
 
-      if (res.data.success) {
+      if (res?.data?.success) {
         const existingUser = JSON.parse(localStorage.getItem('user') || '{}')
         const updatedUser = {
           ...existingUser,
-          firstName: res.data.user.firstName,
-          lastName: res.data.user.lastName,
-          email: res.data.user.email,
+          firstName: res?.data?.user?.firstName || firstName.trim(),
+          lastName: res?.data?.user?.lastName || lastName.trim(),
+          email: res?.data?.user?.email || email.trim(),
         }
 
         localStorage.setItem('user', JSON.stringify(updatedUser))
         setUser(updatedUser)
         toast.success('Settings updated successfully')
+      } else {
+        toast.error('Invalid settings response from server')
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update settings')

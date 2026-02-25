@@ -8,6 +8,8 @@ import { toast } from "sonner"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+
 const Home = () => {
   const [todos, setTodos] = useState([])
   const [loading, setLoading] = useState(false)
@@ -34,9 +36,11 @@ const Home = () => {
   const fetchTodos = async () => {
     try {
       setLoading(true)
-      const res = await axios.get('http://localhost:8000/api/v1/todo/', getAuthHeaders())
-      if (res.data.success) {
-        setTodos(res.data.todos)
+      const res = await axios.get(`${API_URL}/api/v1/todo/`, getAuthHeaders())
+      if (res?.data?.success) {
+        setTodos(res?.data?.todos || [])
+      } else {
+        toast.error('Invalid todos response from server')
       }
     } catch (error) {
       console.log(error)
@@ -62,15 +66,17 @@ const Home = () => {
     try {
       setLoading(true)
       const res = await axios.post(
-        'http://localhost:8000/api/v1/todo/',
+        `${API_URL}/api/v1/todo/`,
         newTodo,
         getAuthHeaders()
       )
       
-      if (res.data.success) {
+      if (res?.data?.success) {
         setTodos([res.data.todo, ...todos])
         setNewTodo({ title: '', description: '' })
         toast.success('Todo created successfully')
+      } else {
+        toast.error('Invalid create todo response from server')
       }
     } catch (error) {
       console.log(error)
@@ -83,13 +89,15 @@ const Home = () => {
   const deleteTodo = async (todoId) => {
     try {
       const res = await axios.delete(
-        `http://localhost:8000/api/v1/todo/${todoId}`,
+        `${API_URL}/api/v1/todo/${todoId}`,
         getAuthHeaders()
       )
       
-      if (res.data.success) {
+      if (res?.data?.success) {
         setTodos(todos.filter(todo => todo._id !== todoId))
         toast.success('Todo deleted successfully')
+      } else {
+        toast.error('Invalid delete todo response from server')
       }
     } catch (error) {
       console.log(error)
@@ -100,18 +108,20 @@ const Home = () => {
   const updateTodo = async (todoId, updateData) => {
     try {
       const res = await axios.put(
-        `http://localhost:8000/api/v1/todo/${todoId}`,
+        `${API_URL}/api/v1/todo/${todoId}`,
         updateData,
         getAuthHeaders()
       )
       
-      if (res.data.success) {
+      if (res?.data?.success) {
         setTodos(todos.map(todo => 
           todo._id === todoId ? res.data.todo : todo
         ))
         setEditingId(null)
         setEditingTodo({ title: '', description: '' })
         toast.success('Todo updated successfully')
+      } else {
+        toast.error('Invalid update todo response from server')
       }
     } catch (error) {
       console.log(error)
