@@ -35,10 +35,10 @@ export const register = async (req, res) => {
     const token = jwt.sign({ id: newUser._id }, process.env.SECRET_KEY, {
       expiresIn: "10m",
     });
-    verifyEmail(token, email); // send email here
     newUser.token = token;
-
     await newUser.save();
+    await verifyEmail(token, email);
+
     return res.status(200).json({
       success: true,
       message: "user registerd sucessfully",
@@ -56,7 +56,7 @@ export const verify = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res.status(400).json({
+      return res.status(400).json({
         success: false,
         message: "Auth Token is Invalid",
       });
@@ -67,7 +67,7 @@ export const verify = async (req, res) => {
     try {
       decoded = jwt.verify(token, process.env.SECRET_KEY);
     } catch (error) {
-      if (error.name === "TokeneExpiredError") {
+      if (error.name === "TokenExpiredError") {
         return res.status(400).json({
           success: false,
           message: "The registed token is expired",
@@ -118,9 +118,10 @@ export const reVerify = async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.SECRET_KEY, {
       expiresIn: "10m",
     });
-    verifyEmail(token, email);
     user.token = token;
     await user.save();
+    await verifyEmail(token, email);
+
     return res.status(200).json({
       success: true,
       message: "Verification send email succefully",
